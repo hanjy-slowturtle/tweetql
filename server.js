@@ -1,4 +1,5 @@
 import { ApolloServer, gql } from "apollo-server";
+import fetch from "node-fetch";
 
 let tweets = [
   {
@@ -49,6 +50,8 @@ const typeDefs = gql`
     allTweets: [Tweet!]!
     tweet(id: ID!): Tweet
     allUsers: [User!]!
+    allMovies: [Movie!]!
+    movie(id: String!): Movie
   }
 
   type Mutation {
@@ -57,6 +60,11 @@ const typeDefs = gql`
     Deletes a Tweet if found, else returns false
     """
     deleteTweet(id: ID!): Boolean!
+  }
+
+  type Movie {
+    id: Int!
+    title: String!
   }
 `;
 
@@ -71,6 +79,16 @@ const resolvers = {
     },
     allUsers() {
       return users;
+    },
+    allMovies() {
+      return fetch("https://yts.mx/api/v2/list_movies.json")
+        .then((r) => r.json())
+        .then((json) => json.data.movies);
+    },
+    movie(_, { id }) {
+      return fetch(`https://yts.mx/api/v2/movie_details.json?movie_id=${id}`)
+        .then((r) => r.json())
+        .then((json) => json.data.movie);
     },
   },
   Mutation: {
